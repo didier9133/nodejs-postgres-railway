@@ -1,72 +1,71 @@
-const faker = require('faker');
 const boom = require('@hapi/boom');
+const { Op } = require('sequelize');
+const { models } = require('../libs/sequelize');
+// const pool = require('../libs/postgres');
 
-class ProductsService {
+//const { models } = require('../libs/sequelize') esta linea lo que esta trayendo
+//es a sequelize es decir el cliente y dentro de el se crea ese models con el nombre
+//que le pusimos en el modelName de la configuracion del modelo es lo mismo hacer
+//sequelize.models.Product de esta forma nos traemos las tablas creadas en el modelo
 
-  constructor(){
-    this.products = [];
-    this.generate();
-  }
-
-  generate() {
-    const limit = 100;
-    for (let index = 0; index < limit; index++) {
-      this.products.push({
-        id: faker.datatype.uuid(),
-        name: faker.commerce.productName(),
-        price: parseInt(faker.commerce.price(), 10),
-        image: faker.image.imageUrl(),
-        isBlock: faker.datatype.boolean(),
-      });
-    }
-  }
+class ProductService {
+  constructor() {}
 
   async create(data) {
-    const newProduct = {
-      id: faker.datatype.uuid(),
-      ...data
-    }
-    this.products.push(newProduct);
+    // const newUser = await models.User.create(data.user);
+    // const newProduct = await models.Product.create({
+    //   ...data,
+    //   userId: newUser.id,
+    // });
+    //esto realiza lo mismo que el codigo de arriba
+    const newProduct = await models.Product.create(data);
     return newProduct;
   }
 
-  find() {
-    return this.products;
+  async find(query) {
+    let options = { include: ['category'] };
+    const { limit, offset, price, price_max, price_min } = query;
+    if ((limit, offset)) {
+      options = { ...options, offset, limit };
+    }
+    if (price) {
+      options = { ...options, where: { price } };
+    }
+    if (price_max && !price_min) throw boom.badRequest('price_min is required');
+
+    if (price_max && price_min) {
+      options = {
+        ...options,
+        where: { price: { [Op.gte]: price_min, [Op.lte]: price_max } },
+      };
+    }
+    const res = await models.Product.findAll(options);
+    return res;
   }
 
   async findOne(id) {
-    const product = this.products.find(item => item.id === id);
-    if (!product) {
-      throw boom.notFound('product not found');
-    }
-    if (product.isBlock) {
-      throw boom.conflict('product is block');
-    }
-    return product;
+    const ProductSearched = await models.Product.findByPk(id, {
+      include: ['category'],
+    });
+    if (!ProductSearched) throw boom.notFound();
+    return ProductSearched;
   }
 
   async update(id, changes) {
-    const index = this.products.findIndex(item => item.id === id);
-    if (index === -1) {
-      throw boom.notFound('product not found');
-    }
-    const product = this.products[index];
-    this.products[index] = {
-      ...product,
-      ...changes
-    };
-    return this.products[index];
+    const Product = await this.findOne(id);
+    const rta = await Product.update(changes);
+    return rta;
   }
 
   async delete(id) {
-    const index = this.products.findIndex(item => item.id === id);
-    if (index === -1) {
-      throw boom.notFound('product not found');
-    }
-    this.products.splice(index, 1);
-    return { id };
+    const Product = await this.findOne(id);
+    await Product.destroy();
+    return id;
   }
-
 }
 
-module.exports = ProductsService;
+module.exports = ProductService;
+
+//{...data,userId:newUser.id} al enviar este objeto estamos enviando data.user que no seria lo
+//ideal pero nuestra validacion del modelo pero solo tomara en cuenta los atributos qeu tenga que validar
+//en el shema lo otro como data.user lo ignorara

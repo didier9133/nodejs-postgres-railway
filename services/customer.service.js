@@ -5,52 +5,54 @@ const { models } = require('../libs/sequelize');
 //const { models } = require('../libs/sequelize') esta linea lo que esta trayendo
 //es a sequelize es decir el cliente y dentro de el se crea ese models con el nombre
 //que le pusimos en el modelName de la configuracion del modelo es lo mismo hacer
-//sequelize.models.Category de esta forma nos traemos las tablas creadas en el modelo
+//sequelize.models.Customer de esta forma nos traemos las tablas creadas en el modelo
 
-class CategoryService {
+class CustomerService {
   constructor() {}
 
   async create(data) {
     // const newUser = await models.User.create(data.user);
-    // const newCategory = await models.Category.create({
+    // const newCustomer = await models.Customer.create({
     //   ...data,
     //   userId: newUser.id,
     // });
     //esto realiza lo mismo que el codigo de arriba
-    const newCategory = await models.Category.create(data);
-    return newCategory;
+    const newCustomer = await models.Customer.create(data, {
+      include: ['user'],
+    });
+    return newCustomer;
   }
 
   async find() {
-    const res = await models.Category.findAll({
-      include: ['products'],
+    const res = await models.Customer.findAll({
+      include: ['user'],
     });
     // const res = await pool.query('select * from task');
     return res;
   }
 
   async findOne(id) {
-    const CategorySearched = await models.Category.findByPk(id, {
-      include: ['products'],
+    const CustomerSearched = await models.Customer.findByPk(id, {
+      include: ['user'],
     });
-    if (!CategorySearched) throw boom.notFound();
-    return CategorySearched;
+    if (!CustomerSearched) throw boom.notFound();
+    return CustomerSearched;
   }
 
   async update(id, changes) {
-    const Category = await this.findOne(id);
-    const rta = await Category.update(changes);
+    const Customer = await this.findOne(id);
+    const rta = await Customer.update(changes);
     return rta;
   }
 
   async delete(id) {
-    const Category = await this.findOne(id);
-    await Category.destroy();
+    const Customer = await this.findOne(id);
+    await Customer.destroy();
     return id;
   }
 }
 
-module.exports = CategoryService;
+module.exports = CustomerService;
 
 //{...data,userId:newUser.id} al enviar este objeto estamos enviando data.user que no seria lo
 //ideal pero nuestra validacion del modelo pero solo tomara en cuenta los atributos qeu tenga que validar
