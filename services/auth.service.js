@@ -54,7 +54,7 @@ class AuthService {
       to: `${user.email}`, // list of receivers
       subject: 'Email recovery password', // Subject line
       text: 'this is a text', // plain text body
-      html: `<b>Dear, ${customer[0].dataValues.name} pleck click on this link: ${link} </b>`, // html body
+      html: `<b>Dear,user please click on this link: ${link} </b>`, // html body
     };
 
     return await this.sendEmail(infoMail);
