@@ -6,6 +6,7 @@ const {
   getOrderSchema,
   addItemSchema,
 } = require('../schemas/order.schema');
+const passport = require('passport');
 
 const router = express.Router();
 const service = new OrderService();
@@ -26,11 +27,12 @@ router.get(
 
 router.post(
   '/',
-  validatorHandler(createOrderSchema, 'body'),
+  passport.authenticate('jwt', { session: false }),
+  validatorHandler(createOrderSchema, 'user'),
   async (req, res, next) => {
     try {
-      const body = req.body;
-      const newOrder = await service.create(body);
+      const { sub } = req.user;
+      const newOrder = await service.createOrder(sub);
       res.status(201).json(newOrder);
     } catch (error) {
       next(error);

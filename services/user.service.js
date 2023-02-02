@@ -1,6 +1,7 @@
 const boom = require('@hapi/boom');
 const { models } = require('../libs/sequelize');
 const pool = require('../libs/postgres');
+const bcrypt = require('bcrypt');
 
 //const { models } = require('../libs/sequelize') esta linea lo que esta trayendo
 //es a sequelize es decir el cliente y dentro de el se crea ese models con el nombre
@@ -11,7 +12,10 @@ class UserService {
   constructor() {}
 
   async create(data) {
+    const hash = await bcrypt.hash(data.password, 10);
+    data.password = hash;
     const newUser = await models.User.create(data);
+    delete newUser.dataValues.password;
     return newUser;
   }
 
@@ -19,6 +23,12 @@ class UserService {
     const res = await models.User.findAll({
       include: ['customer'],
     });
+    // const res = await pool.query('select * from task');
+    return res;
+  }
+
+  async findByEmail(email) {
+    const res = await models.User.findOne({ where: { email } });
     // const res = await pool.query('select * from task');
     return res;
   }

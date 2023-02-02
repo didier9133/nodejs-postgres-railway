@@ -1,6 +1,7 @@
 const boom = require('@hapi/boom');
 const { models } = require('../libs/sequelize');
 // const pool = require('../libs/postgres');
+const bcrypt = require('bcrypt');
 
 //const { models } = require('../libs/sequelize') esta linea lo que esta trayendo
 //es a sequelize es decir el cliente y dentro de el se crea ese models con el nombre
@@ -17,9 +18,14 @@ class CustomerService {
     //   userId: newUser.id,
     // });
     //esto realiza lo mismo que el codigo de arriba
+
+    const hash = await bcrypt.hash(data.user.password, 10);
+    data.user.password = hash;
     const newCustomer = await models.Customer.create(data, {
       include: ['user'],
     });
+
+    delete newCustomer.user.dataValues.password;
     return newCustomer;
   }
 

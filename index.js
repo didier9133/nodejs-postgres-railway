@@ -9,6 +9,7 @@ const {
   boomErrorHandler,
   ormHandlerError,
 } = require('./middlewares/error.handler');
+const { checkApikey } = require('./middlewares/auth.handler');
 
 const app = express();
 const port = parseInt(config.port);
@@ -26,6 +27,7 @@ const options = {
   },
 };
 app.use(cors(options));
+require('./utils/auth');
 
 app.get('/', (req, res) => {
   res.send('Hola mi server en express');
